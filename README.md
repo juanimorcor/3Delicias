@@ -13,8 +13,13 @@ exclusives, adaptades als gustos i necessitats específiques de cada persona o e
 
 Abast del projecte:
 -Disseny i modelatge de figures, decoracions i estructures comestibles mitjançant software compatible amb impressió 3D.
+
 -Producció de postres personalitzats utilitzant impressores 3D d’aliments.
+
 -Selecció d’ingredients aptes per a l’extrusió i la impressió d’alta precisió.
+
 -Creació de prototips, proves de textura i ajustos de qualitat.
+
 -Personalització per esdeveniments (aniversaris, casaments, celebracions corporatives, etc.).
+
 -Presentació de productes finals llestos per a consum.
