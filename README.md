@@ -12,6 +12,7 @@ elevar l'experiència del client, aportant solucions dolces innovadores que tran
 exclusives, adaptades als gustos i necessitats específiques de cada persona o esdeveniment.
 
 Abast del projecte:
+
 -Disseny i modelatge de figures, decoracions i estructures comestibles mitjançant software compatible amb impressió 3D.
 
 -Producció de postres personalitzats utilitzant impressores 3D d’aliments.
