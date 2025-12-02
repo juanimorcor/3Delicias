@@ -1,14 +1,20 @@
 # 3Delicias
-Nombre del equipo: 3Delicias
+Nom de l'equip: 3Delicias
 
-Autores: Enzo Marin y Juan Morillas Cordani 
+Autors: Enzo Marin i Juan Morillas Cordani 
 
-Contexto:
-La empresa es una pastelería especializada en la creación de postres y decoraciones completamente personalizadas mediante el uso de impresoras 3D de alimentos. Este enfoque combina técnicas avanzadas de fabricación
-digital con la tradición repostera, permitiendo trabajar con ingredientes comestibles para dar forma a diseños precisos, creativos y visualmente impactantes. El negocio integra arte, innovación y gastronomía,
-ofreciendo resultados que serían difíciles de lograr con métodos convencionales.
+Context: L'empresa és una pastisseria especialitzada en la creació de postres i decoracions completament personalitzades mitjançant l'ús d'impressores 3D d'aliments. Aquest enfocament combina tècniques avançades de
+fabricació digital amb la tradició rebostera, permetent treballar amb ingredients comestibles per a donar forma a dissenys precisos, creatius i visualment impactants. El negoci integra art, innovació i gastronomia,
+oferint resultats que serien difícils d'aconseguir amb mètodes convencionals. 
 
-Objetivo:
-El propósito principal es desarrollar postres únicos y altamente personalizables aprovechando las posibilidades que brinda la impresión 3D. La empresa busca fusionar creatividad, sabor y tecnología para elevar la
-experiencia del cliente, aportando soluciones dulces innovadoras que transformen la forma en que se conciben y disfrutan los productos de repostería. Con este enfoque, se pretende ofrecer elaboraciones exclusivas,
-adaptadas a los gustos y necesidades específicas de cada persona o evento.
+Objectiu: El propòsit principal és desenvolupar postres úniques i altament personalitzables aprofitant les possibilitats que brinda la impressió 3D. L'empresa busca fusionar creativitat, sabor i tecnologia per a
+elevar l'experiència del client, aportant solucions dolces innovadores que transformin la forma en què es conceben i gaudeixen els productes de rebosteria. Amb aquest enfocament, es pretén oferir elaboracions
+exclusives, adaptades als gustos i necessitats específiques de cada persona o esdeveniment.
+
+Abast del projecte:
+-Disseny i modelatge de figures, decoracions i estructures comestibles mitjançant software compatible amb impressió 3D.
+-Producció de postres personalitzats utilitzant impressores 3D d’aliments.
+-Selecció d’ingredients aptes per a l’extrusió i la impressió d’alta precisió.
+-Creació de prototips, proves de textura i ajustos de qualitat.
+-Personalització per esdeveniments (aniversaris, casaments, celebracions corporatives, etc.).
+-Presentació de productes finals llestos per a consum.
