@@ -36,9 +36,4 @@ El propòsit principal és desenvolupar postres úniques i altament personalitza
 
 ---
 
-<div align="center">
-
-Made with ❤️ by 3Delicias
-
-</div>
 </div>
