@@ -36,10 +36,4 @@ El propòsit principal és desenvolupar postres úniques i altament personalitza
 
 ---
 
-## 📊 Diagrama de Procés
-
-![Diagrama de procés](proces.png)
-
----
-
 </div>
