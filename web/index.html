@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="3Delicias - Pastisseria 3D. Postres personalitzats mitjançant impressió 3D d'aliments. Fusionem art, innovació i gastronomia.">
+    <meta name="keywords" content="pastisseria, 3D, postres, impressió 3D, personalitzat, catalunya">
+    <title>3Delicias | Pastisseria 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estils.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* Estils del Constructor de Pastissos */
+        .cake-builder-section {
+            background: linear-gradient(135deg, #fff8f0 0%, #ffe4d4 100%);
+            padding: 4rem 2rem;
+            min-height: 100vh;
+        }
+
+        .cake-builder-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 2rem;
+            height: calc(100vh - 100px);
+        }
+
+        .builder-title {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .builder-title h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #8b4513;
+            margin-bottom: 0.5rem;
+        }
+
+        .builder-title p {
+            color: #a0522d;
+            font-size: 1.1rem;
+        }
+
+        /* Panell de Components */
+        .component-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: #8b4513;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f4e4d4;
+        }
+
+        .component-category {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-title {
+            font-weight: 600;
+            color: #a0522d;
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .component-item {
+            background: linear-gradient(135deg, #fff9f5 0%, #fff0e6 100%);
+            border: 2px solid #f4e4d4;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            cursor: grab;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .component-item:hover {
+            border-color: #d4a574;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.15);
+        }
+
+        .component-item:active {
+            cursor: grabbing;
+        }
+
+        .component-icon {
+            font-size: 1.8rem;
+        }
+
+        .component-info {
+            flex: 1;
+        }
+
+        .component-name {
+            font-weight: 600;
+            color: #8b4513;
+            font-size: 0.9rem;
+        }
+
+        .component-desc {
+            font-size: 0.75rem;
+            color: #a0522d;
+            margin-top: 0.2rem;
+        }
+
+        /* Llenç del Pastís */
+        .cake-canvas {
+            background: linear-gradient(180deg, #fff9f5 0%, #fff0e6 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cake-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cake-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #d4a574;
+            font-size: 1.1rem;
+            border: 3px dashed #f4e4d4;
+            border-radius: 12px;
+            min-height: 300px;
+        }
+
+        .cake-placeholder.empty {
+            color: #d4a574;
+        }
+
+        .cake-placeholder.has-cake {
+            border: none;
+        }
+
+        .cake-structure {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .cake-layer {
+            width: 100%;
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .cake-layer:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .cake-layer.base {
+            background: linear-gradient(135deg, #d4a574 0%, #c49464 100%);
+            color: white;
+        }
+
+        .cake-layer.filling {
+            background: linear-gradient(135deg, #f5deb3 0%, #e8d4a8 100%);
+            color: #8b4513;
+        }
+
+        .cake-layer.decoration {
+            background: linear-gradient(135deg, #ffb6c1 0%, #ff91a4 100%);
+            color: white;
+        }
+
+        .cake-layer.topping {
+            background: linear-gradient(135deg, #98fb98 0%, #7dd87d 100%);
+            color: #2d5a2d;
+        }
+
+        .layer-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .layer-name {
+            font-weight: 600;
+        }
+
+        .layer-remove {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .layer-remove:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        /* Zones de Solt */
+        .drop-zone {
+            border: 3px dashed #d4a574;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .drop-zone.drag-over {
+            border-color: #8b4513;
+            background: rgba(212, 165, 116, 0.2);
+            transform: scale(1.02);
+        }
+
+        .drop-zone-label {
+            text-align: center;
+            color: #a0522d;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-zone-content {
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* Panell de Previsualització */
+        .preview-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cake-preview {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #fff9f5 0%, #fff0e6 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            min-height: 250px;
+        }
+
+        .preview-cake {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .preview-layer {
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .preview-layer.base {
+            background: linear-gradient(135deg, #d4a574 0%, #c49464 100%);
+            height: 40px;
+            width: 120px;
+        }
+
+        .preview-layer.filling {
+            background: linear-gradient(135deg, #f5deb3 0%, #e8d4a8 100%);
+            height: 20px;
+            width: 110px;
+        }
+
+        .preview-layer.decoration {
+            background: linear-gradient(135deg, #ffb6c1 0%, #ff91a4 100%);
+            height: 15px;
+            width: 100px;
+        }
+
+        .preview-layer.topping {
+            background: linear-gradient(135deg, #98fb98 0%, #7dd87d 100%);
+            height: 10px;
+            width: 90px;
+        }
+
+        .cake-summary {
+            background: #fff9f5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .summary-title {
+            font-weight: 600;
+            color: #8b4513;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+            color: #a0522d;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #8b4513;
+            border: 2px solid #d4a574;
+        }
+
+        .action-btn.secondary:hover {
+            background: #fff9f5;
+        }
+
+        /* Dragging Styles */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .cake-builder-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .component-panel,
+            .preview-panel {
+                order: 2;
+            }
+
+            .cake-canvas {
+                order: 1;
+                min-height: 400px;
+            }
+        }
+
+        /* Notificació Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #8b4513;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Mètodes de Pagament */
+        .payment-methods {
+            margin-top: 1.5rem;
+        }
+
+        .payment-methods-title {
+            font-weight: 600;
+            color: #8b4513;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .payment-option {
+            position: relative;
+        }
+
+        .payment-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .payment-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #f4e4d4;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 100px;
+        }
+
+        .payment-option label:hover {
+            border-color: #d4a574;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
+        }
+
+        .payment-option input[type="radio"]:checked + label {
+            border-color: #8b4513;
+            background: linear-gradient(135deg, #fff9f5 0%, #fff0e6 100%);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+        }
+
+        .payment-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-name {
+            font-weight: 600;
+            color: #8b4513;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .payment-desc {
+            font-size: 0.75rem;
+            color: #a0522d;
+            text-align: center;
+            margin-top: 0.2rem;
+        }
+
+        /* Resum de la Comanda */
+        .order-summary {
+            background: linear-gradient(135deg, #fff9f5 0%, #fff0e6 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 2px solid #f4e4d4;
+        }
+
+        .order-summary-title {
+            font-weight: 600;
+            color: #8b4513;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .order-summary-content {
+            font-size: 0.9rem;
+            color: #a0522d;
+        }
+
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f4e4d4;
+        }
+
+        .order-summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-total {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #d4a574;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #8b4513;
+        }
+
+        /* Estils de Stripe */
+        .stripe-card-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #f4e4d4;
+            border-radius: 12px;
+        }
+
+        .stripe-card-element {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .stripe-card-element:focus {
+            border-color: #8b4513;
+            outline: none;
+        }
+
+        .stripe-card-errors {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            min-height: 1.2rem;
+        }
+
+        .stripe-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #635bff 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .stripe-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+        }
+
+        .stripe-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .payment-form-container {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #fff9f5 0%, #fff0e6 100%);
+            border-radius: 12px;
+            border: 2px solid #f4e4d4;
+        }
+
+        .payment-form-container.active {
+            display: block;
+        }
+
+        .payment-form-title {
+            font-weight: 600;
+            color: #8b4513;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .payment-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .payment-form-group {
+            margin-bottom: 1rem;
+        }
+
+        .payment-form-group label {
+            display: block;
+            font-weight: 500;
+            color: #8b4513;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .payment-form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .payment-form-group input:focus {
+            border-color: #8b4513;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+        }
+
+        .payment-success {
+            display: none;
+            padding: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-radius: 12px;
+            border: 2px solid #28a745;
+        }
+
+        .payment-success.active {
+            display: block;
+        }
+
+        .payment-success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .payment-success-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #155724;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-success-message {
+            color: #155724;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navegació -->
+    <nav>
+        <a href="#" class="logo">3<span>Delicias</span></a>
+        <ul class="nav-links">
+            <li><a href="#inici">Inici</a></li>
+            <li><a href="#nosaltres">Nosaltres</a></li>
+            <li><a href="#serveis">Serveis</a></li>
+            <li><a href="#proces">Procés</a></li>
+            <li><a href="#constructor" class="active">Constructor</a></li>
+            <li><a href="#contacte">Contacte</a></li>
+        </ul>
+        <button class="mobile-menu-btn" aria-label="Menú">☰</button>
+    </nav>
+
+    <!-- Secció Hero -->
+    <section class="hero" id="inici">
+        <div class="hero-content">
+            <h1>3Delicias</h1>
+            <p>Pastisseria 3D - On la tecnologia troba el sabor</p>
+            <p class="hero-subtitle">Postres personalitzats mitjançant impressió 3D d'aliments</p>
+            <a href="#constructor" class="cta-button">Crea el teu pastís</a>
+        </div>
+    </section>
+
+    <!-- Secció Constructor de Pastissos -->
+    <section class="cake-builder-section" id="constructor">
+        <div class="builder-title">
+            <h2>Constructor de Pastissos</h2>
+            <p>Arrossega els components per crear el teu pastís personalitzat</p>
+        </div>
+
+        <div class="cake-builder-container">
+            <!-- Panell de Components -->
+            <div class="component-panel">
+                <h3 class="panel-title">Components</h3>
+
+                <div class="component-category">
+                    <div class="category-title">🍰 Bases</div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Xocolata" data-icon="🍫">
+                        <span class="component-icon">🍫</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Xocolata</div>
+                            <div class="component-desc">Suau i intensa</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Vainilla" data-icon="🧁">
+                        <span class="component-icon">🧁</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Vainilla</div>
+                            <div class="component-desc">Clàssica i delicada</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Maduixa" data-icon="🍓">
+                        <span class="component-icon">🍓</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Maduixa</div>
+                            <div class="component-desc">Fresca i fruitosa</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Llimona" data-icon="🍋">
+                        <span class="component-icon">🍋</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Llimona</div>
+                            <div class="component-desc">Cítrica i refrescant</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Taronja" data-icon="🍊">
+                        <span class="component-icon">🍊</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Taronja</div>
+                            <div class="component-desc">Cítrica i brillant</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Crema" data-icon="🥛">
+                        <span class="component-icon">🥛</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Crema</div>
+                            <div class="component-desc">Lleugera i suau</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa d'Avellana" data-icon="🌰">
+                        <span class="component-icon">🌰</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa d'Avellana</div>
+                            <div class="component-desc">Cruixent i aromàtica</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="base" data-name="Massa de Cacau" data-icon="🍫">
+                        <span class="component-icon">🍫</span>
+                        <div class="component-info">
+                            <div class="component-name">Massa de Cacau</div>
+                            <div class="component-desc">Intensa i profunda</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="component-category">
+                    <div class="category-title">🥄 Farciments</div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Xocolata" data-icon="🍫">
+                        <span class="component-icon">🍫</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Xocolata</div>
+                            <div class="component-desc">Intensa i cremosa</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Vainilla" data-icon="🧁">
+                        <span class="component-icon">🧁</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Vainilla</div>
+                            <div class="component-desc">Suau i aromàtica</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Maduixa" data-icon="🍓">
+                        <span class="component-icon">🍓</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Maduixa</div>
+                            <div class="component-desc">Fresca i natural</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Formatge" data-icon="🧀">
+                        <span class="component-icon">🧀</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Formatge</div>
+                            <div class="component-desc">Cremosa i salada</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Pistatxo" data-icon="🥜">
+                        <span class="component-icon">🥜</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Pistatxo</div>
+                            <div class="component-desc">Cruixent i italiana</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Cafè" data-icon="☕">
+                        <span class="component-icon">☕</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Cafè</div>
+                            <div class="component-desc">Aromàtica i energètica</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Caramel" data-icon="🍯">
+                        <span class="component-icon">🍯</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Caramel</div>
+                            <div class="component-desc">Dolça i apegalosa</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="filling" data-name="Crema de Coco" data-icon="🥥">
+                        <span class="component-icon">🥥</span>
+                        <div class="component-info">
+                            <div class="component-name">Crema de Coco</div>
+                            <div class="component-desc">Tropical i exòtica</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="component-category">
+                    <div class="category-title">🎨 Decoracions</div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Fruites del Bosc" data-icon="🫐">
+                        <span class="component-icon">🫐</span>
+                        <div class="component-info">
+                            <div class="component-name">Fruites del Bosc</div>
+                            <div class="component-desc">Fresques i colorides</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Xocolata Fondant" data-icon="🍫">
+                        <span class="component-icon">🍫</span>
+                        <div class="component-info">
+                            <div class="component-name">Xocolata Fondant</div>
+                            <div class="component-desc">Irresistible i suau</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Nougat" data-icon="🥜">
+                        <span class="component-icon">🥜</span>
+                        <div class="component-info">
+                            <div class="component-name">Nougat</div>
+                            <div class="component-desc">Cruixent i tradicional</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Fruites Tropicals" data-icon="🍍">
+                        <span class="component-icon">🍍</span>
+                        <div class="component-info">
+                            <div class="component-name">Fruites Tropicals</div>
+                            <div class="component-desc">Exòtiques i vibrants</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Pistatxo Triturat" data-icon="🥜">
+                        <span class="component-icon">🥜</span>
+                        <div class="component-info">
+                            <div class="component-name">Pistatxo Triturat</div>
+                            <div class="component-desc">Cruixent i verd</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Fruites Vermelles" data-icon="🍒">
+                        <span class="component-icon">🍒</span>
+                        <div class="component-info">
+                            <div class="component-name">Fruites Vermelles</div>
+                            <div class="component-desc">Dolces i brillants</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Xocolata Blanca" data-icon="🤍">
+                        <span class="component-icon">🤍</span>
+                        <div class="component-info">
+                            <div class="component-name">Xocolata Blanca</div>
+                            <div class="component-desc">Suau i elegant</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="decoration" data-name="Taronges Confitades" data-icon="🍊">
+                        <span class="component-icon">🍊</span>
+                        <div class="component-info">
+                            <div class="component-name">Taronges Confitades</div>
+                            <div class="component-desc">Cítriques i dolces</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="component-category">
+                    <div class="category-title">✨ Acabats</div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Sucre Glass" data-icon="✨">
+                        <span class="component-icon">✨</span>
+                        <div class="component-info">
+                            <div class="component-name">Sucre Glass</div>
+                            <div class="component-desc">Brillant i elegant</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Nata Muntada" data-icon="🍦">
+                        <span class="component-icon">🍦</span>
+                        <div class="component-info">
+                            <div class="component-name">Nata Muntada</div>
+                            <div class="component-desc">Lleugera i airejada</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Fondant" data-icon="🎨">
+                        <span class="component-icon">🎨</span>
+                        <div class="component-info">
+                            <div class="component-name">Fondant</div>
+                            <div class="component-desc">Suau i modelable</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Xocolata Fosa" data-icon="🍫">
+                        <span class="component-icon">🍫</span>
+                        <div class="component-info">
+                            <div class="component-name">Xocolata Fosa</div>
+                            <div class="component-desc">Intensa i brillant</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Glacé de Maduixa" data-icon="🍓">
+                        <span class="component-icon">🍓</span>
+                        <div class="component-info">
+                            <div class="component-name">Glacé de Maduixa</div>
+                            <div class="component-desc">Fresca i fruitosa</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Glacé de Llimona" data-icon="🍋">
+                        <span class="component-icon">🍋</span>
+                        <div class="component-info">
+                            <div class="component-name">Glacé de Llimona</div>
+                            <div class="component-desc">Cítrica i brillant</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Caramel Salat" data-icon="🧂">
+                        <span class="component-icon">🧂</span>
+                        <div class="component-info">
+                            <div class="component-name">Caramel Salat</div>
+                            <div class="component-desc">Dolça i salada</div>
+                        </div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="topping" data-name="Nou Pecan" data-icon="🌰">
+                        <span class="component-icon">🌰</span>
+                        <div class="component-info">
+                            <div class="component-name">Nou Pecan</div>
+                            <div class="component-desc">Cruixent i americana</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Llenç del Pastís -->
+            <div class="cake-canvas">
+                <div class="cake-placeholder empty" id="cakePlaceholder">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎂</div>
+                        <p>Arrossega els components aquí per començar</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Base → Farciment → Decoració → Acabat</p>
+                    </div>
+                </div>
+
+                <div class="cake-structure" id="cakeStructure" style="display: none;">
+                    <div class="drop-zone" data-accept="base">
+                        <div class="drop-zone-label">🍰 Base</div>
+                        <div class="drop-zone-content" id="baseZone"></div>
+                    </div>
+                    <div class="drop-zone" data-accept="filling">
+                        <div class="drop-zone-label">🥄 Farciment</div>
+                        <div class="drop-zone-content" id="fillingZone"></div>
+                    </div>
+                    <div class="drop-zone" data-accept="decoration">
+                        <div class="drop-zone-label">🎨 Decoració</div>
+                        <div class="drop-zone-content" id="decorationZone"></div>
+                    </div>
+                    <div class="drop-zone" data-accept="topping">
+                        <div class="drop-zone-label">✨ Acabat</div>
+                        <div class="drop-zone-content" id="toppingZone"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panell de Previsualització -->
+            <div class="preview-panel">
+                <h3 class="panel-title">Vista Prèvia</h3>
+
+                <div class="cake-preview">
+                    <div class="preview-cake" id="previewCake">
+                        <div style="text-align: center; color: #d4a574;">
+                            <div style="font-size: 2rem;">🎂</div>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">El teu pastís apareixerà aquí</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cake-summary" id="cakeSummary" style="display: none;">
+                    <div class="summary-title">Resum del Pastís</div>
+                    <div id="summaryContent"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn primary" id="saveCakeBtn" disabled>
+                        💾 Guardar Pastís
+                    </button>
+                    <button class="action-btn secondary" id="clearCakeBtn">
+                        🗑️ Esborrar Tot
+                    </button>
+                    <button class="action-btn secondary" id="orderCakeBtn" disabled>
+                        🛒 Demanar Aquest Pastís
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secció Sobre Nosaltres -->
+    <section class="about" id="nosaltres">
+        <div class="section-title fade-in">
+            <h2>Sobre Nosaltres</h2>
+            <p>Fusionem art, innovació i gastronomia per crear experiències dolces úniques</p>
+        </div>
+        <div class="about-content">
+            <div class="about-text fade-in">
+                <h3>Revolucionant la Pastisseria</h3>
+                <p>Som una pastisseria especialitzada en la creació de postres i decoracions completament personalitzades mitjançant l'ús d'impressores 3D d'aliments.</p>
+                <p>Aquest enfocament combina tècniques avançades de fabricació digital amb la tradició rebostera, permetent treballar amb ingredients comestibles per donar forma a dissenys precisos, creatius i visualment impactants.</p>
+                <p>El nostre negoci integra art, innovació i gastronomia, oferint resultats que serien difícils d'aconseguir amb mètodes convencionals.</p>
+            </div>
+            <div class="about-image fade-in float-animation"></div>
+        </div>
+    </section>
+
+    <!-- Secció Equip -->
+    <section class="authors">
+        <div class="section-title fade-in">
+            <h2>L'Equip</h2>
+            <p>Els creadors darrere de 3Delicias</p>
+        </div>
+        <div class="authors-grid">
+            <div class="author-card fade-in card-3d">
+                <div class="author-avatar">👨‍🍳</div>
+                <h4>Enzo Marin</h4>
+                <p>Co-fundador i especialista en tecnologia 3D aplicada a l'alimentació</p>
+            </div>
+            <div class="author-card fade-in card-3d">
+                <div class="author-avatar">👨‍🍳</div>
+                <h4>Juan Morillas Cordani</h4>
+                <p>Co-fundador i expert en disseny i creativitat gastronòmica</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secció Serveis -->
+    <section class="services" id="serveis">
+        <div class="section-title fade-in">
+            <h2>Els Nostres Serveis</h2>
+            <p>Una gamma completa de solucions dolces personalitzades</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card fade-in card-3d">
+                <div class="service-icon">🎨</div>
+                <h4>Disseny i Modelatge</h4>
+                <p>Figures, decoracions i estructures comestibles mitjançant software compatible amb impressió 3D</p>
+            </div>
+            <div class="service-card fade-in card-3d">
+                <div class="service-icon">🖨️</div>
+                <h4>Producció 3D</h4>
+                <p>Postres personalitzats utilitzant impressores 3D d'aliments d'alta precisió</p>
+            </div>
+            <div class="service-card fade-in card-3d">
+                <div class="service-icon">🥣</div>
+                <h4>Ingredients Premium</h4>
+                <p>Selecció d'ingredients aptes per a l'extrusió i la impressió d'alta qualitat</p>
+            </div>
+            <div class="service-card fade-in card-3d">
+                <div class="service-icon">🧪</div>
+                <h4>Prototips i Proves</h4>
+                <p>Creació de prototips, proves de textura i ajustos de qualitat</p>
+            </div>
+            <div class="service-card fade-in card-3d">
+                <div class="service-icon">🎉</div>
+                <h4>Esdeveniments</h4>
+                <p>Personalització per a aniversaris, casaments, celebracions corporatives i més</p>
+            </div>
+            <div class="service-card fade-in card-3d">
+                <div class="service-icon">📦</div>
+                <h4>Producte Final</h4>
+                <p>Presentació de productes finals llestos per a consum amb acabat perfecte</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secció Procés -->
+    <section class="process" id="proces">
+        <div class="section-title fade-in">
+            <h2>El Nostre Procés</h2>
+            <p>De la idea al dolç perfecte</p>
+        </div>
+        <div class="process-steps">
+            <div class="process-step fade-in">
+                <div class="step-number pulse-animation">1</div>
+                <h4>Consulta</h4>
+                <p>Entenem les teves necessitats i preferències</p>
+            </div>
+            <div class="process-step fade-in">
+                <div class="step-number pulse-animation">2</div>
+                <h4>Disseny</h4>
+                <p>Creem el model 3D personalitzat</p>
+            </div>
+            <div class="process-step fade-in">
+                <div class="step-number pulse-animation">3</div>
+                <h4>Impressió</h4>
+                <p>Imprimim amb ingredients de qualitat</p>
+            </div>
+            <div class="process-step fade-in">
+                <div class="step-number pulse-animation">4</div>
+                <h4>Lliurament</h4>
+                <p>Rebis el teu dolç únic i perfecte</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secció Impressora 3D -->
+    <section class="printer-section" id="impressora">
+        <div class="section-title fade-in">
+            <h2>Impressió 3D en Acció</h2>
+            <p>Observa com la nostra impressora 3D crea un pastís personalitzat capa per capa</p>
+        </div>
+        <div class="printer-scene fade-in">
+            <div class="printer-frame">
+                <div class="printer-label">3Delicias · Food 3D Printer</div>
+
+                <div class="extruder-arm" id="extruder">
+                    <div class="extruder-body">
+                        <div class="extruder-light"></div>
+                        <div class="extruder-nozzle">
+                            <div class="drip" id="drip"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="build-plate"></div>
+                <div class="spool"></div>
+
+                <div class="cake-print" id="cakePrint">
+                    <div class="cake-layer-print base" id="layer0" style="height: 0;"></div>
+                    <div class="cake-layer-print base" id="layer1" style="height: 0;"></div>
+                    <div class="cake-layer-print base" id="layer2" style="height: 0;"></div>
+                    <div class="cake-layer-print filling" id="layer3" style="height: 0;"></div>
+                    <div class="cake-layer-print filling" id="layer4" style="height: 0;"></div>
+                    <div class="cake-layer-print filling" id="layer5" style="height: 0;"></div>
+                    <div class="cake-layer-print decoration" id="layer6" style="height: 0;"></div>
+                    <div class="cake-layer-print decoration" id="layer7" style="height: 0;"></div>
+                    <div class="cake-layer-print topping" id="layer8" style="height: 0;"></div>
+                    <div class="cake-layer-print topping" id="layer9" style="height: 0;"></div>
+                </div>
+            </div>
+
+            <div class="printer-controls">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">0%</span>
+                </div>
+                <div class="status" id="printerStatus">Preparant impressora...</div>
+                <button class="printer-reset-btn" id="printerResetBtn">🔄 Imprimir de nou</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secció Contacte -->
+    <section class="contact" id="contacte">
+        <div class="contact-content fade-in">
+            <h2>Contacta'ns</h2>
+            <p>Estem aquí per fer realitat la teva idea</p>
+            <form class="contact-form" id="contactForm" novalidate>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nom">Nom *</label>
+                        <input type="text" id="nom" name="nom" placeholder="El teu nom complet" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Correu electrònic *</label>
+                        <input type="email" id="email" name="email" placeholder="exemple@correu.com" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telefon">Telèfon</label>
+                        <input type="tel" id="telefon" name="telefon" placeholder="+34 600 123 456">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipus_esdeveniment">Tipus d'esdeveniment</label>
+                        <select id="tipus_esdeveniment" name="tipus_esdeveniment" required>
+                            <option value="">Selecciona una opció</option>
+                            <option value="aniversari">Aniversari</option>
+                            <option value="casament">Casament</option>
+                            <option value="corporatiu">Corporatiu</option>
+                            <option value="altres">Altres</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Mètodes de Pagament -->
+                <div class="payment-methods">
+                    <div class="payment-methods-title">💳 Mètode de Pagament</div>
+                    <div class="payment-options">
+                        <div class="payment-option">
+                            <input type="radio" id="payment-card" name="payment_method" value="card" required>
+                            <label for="payment-card">
+                                <span class="payment-icon">💳</span>
+                                <span class="payment-name">Targeta</span>
+                                <span class="payment-desc">Visa, Mastercard</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulari de Pagament Stripe -->
+                <div class="payment-form-container" id="paymentFormContainer">
+                    <div class="payment-form-title">💳 Detalls de la Targeta</div>
+                    <div class="payment-form-row">
+                        <div class="payment-form-group">
+                            <label for="cardName">Nom a la targeta *</label>
+                            <input type="text" id="cardName" placeholder="JOAN GARCÍA" required>
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="cardEmail">Correu electrònic *</label>
+                            <input type="email" id="cardEmail" placeholder="joan@exemple.com" required>
+                        </div>
+                    </div>
+                    <div class="payment-form-group">
+                        <label for="cardElement">Informació de la targeta *</label>
+                        <div class="stripe-card-container">
+                            <div id="cardElement" class="stripe-card-element"></div>
+                        </div>
+                        <div id="cardErrors" class="stripe-card-errors" role="alert"></div>
+                    </div>
+                    <button id="submitPayment" class="stripe-button">
+                        <span id="paymentBtnText">Pagar Ara</span>
+                        <span id="paymentBtnLoading" style="display: none;">Processant...</span>
+                    </button>
+                </div>
+
+                <!-- Pagament Completat -->
+                <div class="payment-success" id="paymentSuccess">
+                    <div class="payment-success-icon">✅</div>
+                    <div class="payment-success-title">Pagament Completat!</div>
+                    <div class="payment-success-message">Gràcies per la teva comanda. Rebràs un correu de confirmació aviat.</div>
+                </div>
+
+                <!-- Resum de la Comanda -->
+                <div class="order-summary" id="orderSummary" style="display: none;">
+                    <div class="order-summary-title">
+                        <span>📋</span>
+                        <span>Resum de la Comanda</span>
+                    </div>
+                    <div class="order-summary-content" id="orderSummaryContent">
+                        <!-- Dynamic content -->
+                    </div>
+                    <div class="order-total">
+                        <span>Total:</span>
+                        <span id="orderTotal">0,00 €</span>
+                    </div>
+                </div>
+
+                <input type="hidden" name="cake_ingredients" id="cakeIngredients" value="">
+                <input type="hidden" name="cardholder_name" id="cardholderName" value="">
+                <input type="hidden" name="cardholder_email" id="cardholderEmail" value="">
+                <input type="hidden" name="total_amount" id="totalAmount" value="">
+
+                <div class="form-group">
+                    <label for="missatge">Missatge *</label>
+                    <textarea id="missatge" name="missatge" placeholder="Explica'ns la teva idea..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">Enviar Missatge</span>
+                    <span id="btnLoading" style="display: none;">Enviant...</span>
+                </button>
+            </form>
+            <div id="formMessage" style="margin-top: 1rem; display: none;"></div>
+        </div>
+    </section>
+
+    <!-- Peu de pàgina -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">3Delicias</div>
+            <p>Pastisseria 3D - On la tecnologia troba el sabor</p>
+            <div class="footer-links">
+                <a href="#inici">Inici</a>
+                <a href="#nosaltres">Nosaltres</a>
+                <a href="#serveis">Serveis</a>
+                <a href="#proces">Procés</a>
+                <a href="#contacte">Contacte</a>
+            </div>
+            <div class="footer-copyright">
+                © 2026 3Delicias. Tots els drets reservats. Creat per Enzo Marin i Juan Morillas Cordani.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notificació Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Cake Builder State
+        const cakeState = {
+            base: [],
+            filling: [],
+            decoration: [],
+            topping: []
+        };
+
+        function isCakeEmpty() {
+            return Object.values(cakeState).every(arr => arr.length === 0);
+        }
+
+        // DOM Elements
+        const cakePlaceholder = document.getElementById('cakePlaceholder');
+        const cakeStructure = document.getElementById('cakeStructure');
+        const previewCake = document.getElementById('previewCake');
+        const cakeSummary = document.getElementById('cakeSummary');
+        const summaryContent = document.getElementById('summaryContent');
+        const saveCakeBtn = document.getElementById('saveCakeBtn');
+        const clearCakeBtn = document.getElementById('clearCakeBtn');
+        const orderCakeBtn = document.getElementById('orderCakeBtn');
+        const toast = document.getElementById('toast');
+
+        // Show toast notification
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize drag and drop
+        function initDragAndDrop() {
+            const components = document.querySelectorAll('.component-item');
+            const dropZones = document.querySelectorAll('.drop-zone');
+
+            components.forEach(component => {
+                component.addEventListener('dragstart', handleDragStart);
+                component.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            const component = e.target.closest('.component-item');
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                type: component.dataset.type,
+                name: component.dataset.name,
+                icon: component.dataset.icon
+            }));
+            component.classList.add('dragging');
+
+            // Show drop zones when dragging starts
+            cakePlaceholder.style.display = 'none';
+            cakeStructure.style.display = 'flex';
+        }
+
+        function handleDragEnd(e) {
+            e.target.closest('.component-item').classList.remove('dragging');
+
+            if (isCakeEmpty()) {
+                cakePlaceholder.style.display = 'flex';
+                cakeStructure.style.display = 'none';
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            if (!dropZone) return;
+            dropZone.classList.remove('drag-over');
+
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const acceptType = dropZone.dataset.accept;
+
+            if (data.type !== acceptType) {
+                showToast(`Aquest component va a la secció de ${data.type === 'base' ? 'base' : data.type === 'filling' ? 'farciment' : data.type === 'decoration' ? 'decoració' : 'acabat'}`);
+                return;
+            }
+
+            addComponentToCake(data.type, data.name, data.icon);
+        }
+
+        function renderZone(type) {
+            const zone = document.getElementById(`${type}Zone`);
+            const items = cakeState[type];
+            zone.innerHTML = items.map((item, index) => `
+                <div class="cake-layer ${type}">
+                    <div class="layer-info">
+                        <span class="layer-name">${item.icon} ${item.name}</span>
+                        <button class="layer-remove" onclick="removeComponent('${type}', ${index})">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addComponentToCake(type, name, icon) {
+            cakeState[type].push({ name, icon });
+
+            cakePlaceholder.style.display = 'none';
+            cakeStructure.style.display = 'flex';
+
+            renderZone(type);
+            updatePreview();
+            updateSummary();
+            updateButtons();
+        }
+
+        function removeComponent(type, index) {
+            cakeState[type].splice(index, 1);
+            renderZone(type);
+
+            if (isCakeEmpty()) {
+                cakePlaceholder.style.display = 'flex';
+                cakeStructure.style.display = 'none';
+            }
+
+            updatePreview();
+            updateSummary();
+            updateButtons();
+        }
+
+        function updatePreview() {
+            if (isCakeEmpty()) {
+                previewCake.innerHTML = `
+                    <div style="text-align: center; color: #d4a574;">
+                        <div style="font-size: 2rem;">🎂</div>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">El teu pastís apareixerà aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let previewHTML = '';
+            const order = ['topping', 'decoration', 'filling', 'base'];
+
+            order.forEach(type => {
+                cakeState[type].forEach(() => {
+                    previewHTML += `<div class="preview-layer ${type}"></div>`;
+                });
+            });
+
+            previewCake.innerHTML = `<div class="preview-cake">${previewHTML}</div>`;
+        }
+
+        function updateSummary() {
+            if (isCakeEmpty()) {
+                cakeSummary.style.display = 'none';
+                return;
+            }
+
+            cakeSummary.style.display = 'block';
+
+            const typeLabels = {
+                base: 'Base',
+                filling: 'Farciment',
+                decoration: 'Decoració',
+                topping: 'Acabat'
+            };
+
+            let summaryHTML = '';
+            Object.entries(cakeState).forEach(([type, items]) => {
+                items.forEach(item => {
+                    summaryHTML += `
+                        <div class="summary-item">
+                            <span>${typeLabels[type]}:</span>
+                            <span>${item.icon} ${item.name}</span>
+                        </div>
+                    `;
+                });
+            });
+
+            summaryContent.innerHTML = summaryHTML;
+        }
+
+        function updateButtons() {
+            const hasComponents = !isCakeEmpty();
+            saveCakeBtn.disabled = !hasComponents;
+            orderCakeBtn.disabled = !hasComponents;
+        }
+
+        // Clear cake
+        clearCakeBtn.addEventListener('click', () => {
+            Object.keys(cakeState).forEach(type => {
+                cakeState[type] = [];
+                document.getElementById(`${type}Zone`).innerHTML = '';
+            });
+
+            cakePlaceholder.style.display = 'flex';
+            cakeStructure.style.display = 'none';
+
+            updatePreview();
+            updateSummary();
+            updateButtons();
+
+            showToast('Pastís esborrat correctament');
+        });
+
+        // Save cake
+        saveCakeBtn.addEventListener('click', () => {
+            const cakeData = JSON.stringify(cakeState);
+            localStorage.setItem('savedCake', cakeData);
+            showToast('Pastís guardat correctament!');
+        });
+
+        // Order cake
+        orderCakeBtn.addEventListener('click', () => {
+            const parts = [];
+            Object.entries(cakeState).forEach(([type, items]) => {
+                if (items.length > 0) {
+                    items.forEach(item => parts.push(item.name));
+                }
+            });
+            const cakeDescription = parts.join(', ');
+
+            const messageInput = document.getElementById('missatge');
+            messageInput.value = `Vull demanar un pastís personalitzat amb: ${cakeDescription}`;
+
+            // Show order summary
+            updateOrderSummary();
+
+            document.getElementById('contacte').scrollIntoView({ behavior: 'smooth' });
+            showToast('Completa el formulari per finalitzar la comanda');
+        });
+
+        // Update order summary
+        function updateOrderSummary() {
+            const orderSummary = document.getElementById('orderSummary');
+            const orderSummaryContent = document.getElementById('orderSummaryContent');
+            const orderTotal = document.getElementById('orderTotal');
+
+            if (isCakeEmpty()) {
+                orderSummary.style.display = 'none';
+                return;
+            }
+
+            orderSummary.style.display = 'block';
+
+            const prices = {
+                base: 15,
+                filling: 8,
+                decoration: 10,
+                topping: 5
+            };
+
+            const typeLabels = {
+                base: 'Base',
+                filling: 'Farciment',
+                decoration: 'Decoració',
+                topping: 'Acabat'
+            };
+
+            let summaryHTML = '';
+            let total = 0;
+
+            Object.entries(cakeState).forEach(([type, items]) => {
+                items.forEach(item => {
+                    const price = prices[type] || 0;
+                    total += price;
+                    summaryHTML += `
+                        <div class="order-summary-item">
+                            <span>${typeLabels[type]}: ${item.icon} ${item.name}</span>
+                            <span>${price.toFixed(2)} €</span>
+                        </div>
+                    `;
+                });
+            });
+
+            orderSummaryContent.innerHTML = summaryHTML;
+            orderTotal.textContent = `${total.toFixed(2)} €`;
+        }
+
+        // Load saved cake on page load
+        function loadSavedCake() {
+            const savedCake = localStorage.getItem('savedCake');
+            if (savedCake) {
+                try {
+                    const data = JSON.parse(savedCake);
+                    Object.entries(data).forEach(([type, items]) => {
+                        if (Array.isArray(items)) {
+                            items.forEach(item => {
+                                if (item) addComponentToCake(type, item.name, item.icon);
+                            });
+                        } else if (items) {
+                            addComponentToCake(type, items.name, items.icon);
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error loading saved cake:', e);
+                }
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initDragAndDrop();
+            loadSavedCake();
+        });
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            if (navLinks.style.display === 'flex') {
+                navLinks.style.flexDirection = 'column';
+                navLinks.style.position = 'absolute';
+                navLinks.style.top = '100%';
+                navLinks.style.left = '0';
+                navLinks.style.right = '0';
+                navLinks.style.background = 'rgba(255, 248, 240, 0.98)';
+                navLinks.style.padding = '2rem';
+                navLinks.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+            }
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    navLinks.style.display = 'none';
+                }
+            });
+        });
+
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Form submission with AJAX
+        const contactForm = document.getElementById('contactForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoading = document.getElementById('btnLoading');
+        const formMessage = document.getElementById('formMessage');
+
+        // Validació de formularis
+        function validateForm() {
+            let isValid = true;
+            const fields = [
+                { id: 'nom', error: 'El camp Nom és obligatori' },
+                { id: 'email', error: 'El camp Correu electrònic és obligatori' },
+                { id: 'tipus_esdeveniment', error: 'Selecciona un tipus d\'esdeveniment' },
+                { id: 'missatge', error: 'El camp Missatge és obligatori' }
+            ];
+
+            // Netejar errors anteriors
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
+            document.querySelectorAll('.form-group.error, .form-group.success').forEach(el => {
+                el.classList.remove('error', 'success');
+            });
+
+            fields.forEach(field => {
+                const input = document.getElementById(field.id);
+                const formGroup = input.closest('.form-group');
+                let value = input.value.trim();
+
+                if (field.id === 'tipus_esdeveniment') {
+                    value = input.value;
+                }
+
+                if (!value || (field.id === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))) {
+                    isValid = false;
+                    formGroup.classList.add('error');
+
+                    const errorEl = document.createElement('div');
+                    errorEl.className = 'error-message visible';
+                    if (field.id === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                        errorEl.textContent = 'El correu electrònic no és vàlid';
+                    } else {
+                        errorEl.textContent = field.error;
+                    }
+                    formGroup.appendChild(errorEl);
+                } else {
+                    formGroup.classList.add('success');
+                }
+            });
+
+            // Validar telèfon si s'ha omplert
+            const telefon = document.getElementById('telefon');
+            const telefonGroup = telefon.closest('.form-group');
+            if (telefon.value.trim() && !/^[\d\s+\-()]{6,20}$/.test(telefon.value.trim())) {
+                isValid = false;
+                telefonGroup.classList.add('error');
+                const errorEl = document.createElement('div');
+                errorEl.className = 'error-message visible';
+                errorEl.textContent = 'El telèfon no és vàlid';
+                telefonGroup.appendChild(errorEl);
+            } else if (telefon.value.trim()) {
+                telefonGroup.classList.add('success');
+            }
+
+            return isValid;
+        }
+
+        contactForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Netejar missatges anteriors
+            formMessage.style.display = 'none';
+
+            if (!validateForm()) {
+                document.querySelector('.form-group.error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // Omplir camps ocults amb dades del constructor i pagament
+            document.getElementById('cakeIngredients').value = JSON.stringify(cakeState);
+            document.getElementById('cardholderName').value = document.getElementById('cardName')?.value || '';
+            document.getElementById('cardholderEmail').value = document.getElementById('cardEmail')?.value || '';
+            document.getElementById('totalAmount').value = calculateTotalAmount() / 100;
+
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+            formMessage.style.display = 'none';
+
+            // Collect form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('registre.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                // Show result message
+                formMessage.style.display = 'block';
+                formMessage.className = result.success ? 'text-center' : 'text-center';
+                formMessage.style.color = result.success ? '#28a745' : '#dc3545';
+                formMessage.textContent = result.message;
+
+                if (result.success) {
+                    contactForm.reset();
+                    document.getElementById('cakeIngredients').value = '';
+                    document.getElementById('cardholderName').value = '';
+                    document.getElementById('cardholderEmail').value = '';
+                    document.getElementById('totalAmount').value = '';
+                    document.querySelectorAll('.form-group.success').forEach(el => el.classList.remove('success'));
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                formMessage.style.display = 'block';
+                formMessage.style.color = '#dc3545';
+                formMessage.textContent = 'Error en enviar el formulari. Si us plau, intenta-ho més tard.';
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+            }
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Stripe Payment Integration
+        // IMPORTANT: Replace with your actual Stripe publishable key
+        const stripe = Stripe('pk_test_YOUR_STRIPE_PUBLISHABLE_KEY');
+        let cardElement;
+        let stripeClientSecret;
+
+        // Initialize Stripe Elements
+        function initStripe() {
+            const elements = stripe.elements({
+                fonts: [{
+                    cssSrc: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap',
+                }],
+                locale: 'auto'
+            });
+
+            // Create card element
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        color: '#32325d',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSmoothing: 'antialiased',
+                        fontSize: '16px',
+                        '::placeholder': {
+                            color: '#aab7c4'
+                        }
+                    },
+                    invalid: {
+                        color: '#fa755a',
+                        iconColor: '#fa755a'
+                    }
+                }
+            });
+
+            cardElement.mount('#cardElement');
+
+            // Handle real-time validation errors
+            cardElement.on('change', function(event) {
+                const displayError = document.getElementById('cardErrors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+        }
+
+        // Payment method selection handler
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const paymentFormContainer = document.getElementById('paymentFormContainer');
+                const selectedMethod = this.value;
+
+                // Show Stripe form for card payments
+                if (selectedMethod === 'card') {
+                    paymentFormContainer.classList.add('active');
+                    if (!cardElement) {
+                        initStripe();
+                    }
+                } else {
+                    paymentFormContainer.classList.remove('active');
+                }
+            });
+        });
+
+        // Handle payment submission
+        const submitPaymentBtn = document.getElementById('submitPayment');
+        if (submitPaymentBtn) {
+            submitPaymentBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+
+                const cardName = document.getElementById('cardName').value;
+                const cardEmail = document.getElementById('cardEmail').value;
+
+                if (!cardName || !cardEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cardEmail)) {
+                    document.getElementById('cardErrors').textContent = !cardName ? 'El nom a la targeta és obligatori' : 'El correu electrònic no és vàlid';
+                    return;
+                }
+
+                // Show loading state
+                submitPaymentBtn.disabled = true;
+                document.getElementById('paymentBtnText').style.display = 'none';
+                document.getElementById('paymentBtnLoading').style.display = 'inline';
+
+                try {
+                    // Create payment intent on your server
+                    // This is where you would call your backend to create a payment intent
+                    const response = await fetch('/create-payment-intent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            amount: calculateTotalAmount(),
+                            currency: 'eur',
+                            description: 'Comanda 3Delicias',
+                            metadata: {
+                                cake: JSON.stringify(cakeState),
+                                customer_name: cardName,
+                                customer_email: cardEmail
+                            }
+                        })
+                    });
+
+                    const { clientSecret, error: serverError } = await response.json();
+
+                    if (serverError) {
+                        throw new Error(serverError);
+                    }
+
+                    // Confirm card payment
+                    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: cardName,
+                                email: cardEmail
+                            }
+                        }
+                    });
+
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+
+                    if (paymentIntent.status === 'succeeded') {
+                        // Payment successful
+                        document.getElementById('paymentSuccess').classList.add('active');
+                        document.getElementById('paymentFormContainer').style.display = 'none';
+                        document.querySelector('.payment-methods').style.display = 'none';
+                        document.querySelector('.order-summary').style.display = 'none';
+
+                        // Clear cake state
+                        Object.keys(cakeState).forEach(type => {
+                            cakeState[type] = [];
+                            document.getElementById(`${type}Zone`).innerHTML = '';
+                        });
+                        localStorage.removeItem('savedCake');
+
+                        showToast('Pagament completat correctament!');
+                    }
+
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    document.getElementById('cardErrors').textContent = error.message || 'Error en processar el pagament. Si us plau, intenta-ho de nou.';
+                } finally {
+                    // Reset button state
+                    submitPaymentBtn.disabled = false;
+                    document.getElementById('paymentBtnText').style.display = 'inline';
+                    document.getElementById('paymentBtnLoading').style.display = 'none';
+                }
+            });
+        }
+
+        // Calculate total amount in cents
+        function calculateTotalAmount() {
+            const prices = {
+                base: 1500,  // 15.00 EUR in cents
+                filling: 800,   // 8.00 EUR in cents
+                decoration: 1000, // 10.00 EUR in cents
+                topping: 500    // 5.00 EUR in cents
+            };
+
+            let total = 0;
+            Object.entries(cakeState).forEach(([type, items]) => {
+                total += (prices[type] || 0) * items.length;
+            });
+
+            return total;
+        }
+
+        // 3D Printer Animation
+        const PRINT_TOTAL_LAYERS = 10;
+        const PRINT_LAYER_HEIGHT = 18;
+        let printCurrentLayer = -1;
+        let isPrinting = false;
+
+        const printLayerEls = [];
+        for (let i = 0; i < PRINT_TOTAL_LAYERS; i++) {
+            printLayerEls.push(document.getElementById(`layer${i}`));
+        }
+        const printExtruder = document.getElementById('extruder');
+        const printDrip = document.getElementById('drip');
+        const printProgressFill = document.getElementById('progressFill');
+        const printProgressText = document.getElementById('progressText');
+        const printStatus = document.getElementById('printerStatus');
+        const printResetBtn = document.getElementById('printerResetBtn');
+
+        function getPrintExtruderY(layerIndex) {
+            const totalHeight = PRINT_TOTAL_LAYERS * PRINT_LAYER_HEIGHT + (PRINT_TOTAL_LAYERS - 1) * 4;
+            return 420 - 26 - totalHeight + layerIndex * (PRINT_LAYER_HEIGHT + 4) + PRINT_LAYER_HEIGHT + 8;
+        }
+
+        function printBuildLayer(index) {
+            return new Promise(resolve => {
+                const y = getPrintExtruderY(index);
+                printExtruder.style.transform = `translateX(-50%) translateY(${y}px)`;
+                printExtruder.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+
+                setTimeout(() => {
+                    printDrip.classList.add('active');
+
+                    const names = ['base', 'base', 'base', 'filling', 'filling', 'filling', 'decoration', 'decoration', 'topping', 'topping'];
+                    const labels = { base: 'Base', filling: 'Farciment', decoration: 'Decoració', topping: 'Acabat' };
+                    printStatus.textContent = `Imprimint capa ${index + 1}: ${labels[names[index]]}...`;
+
+                    let height = 0;
+                    const grow = setInterval(() => {
+                        height += 2;
+                        printLayerEls[index].style.height = `${height}px`;
+                        if (height >= PRINT_LAYER_HEIGHT) {
+                            clearInterval(grow);
+                            printLayerEls[index].style.height = `${PRINT_LAYER_HEIGHT}px`;
+
+                            const p = document.createElement('div');
+                            p.className = 'particle';
+                            p.style.left = `${200 + Math.random() * 60}px`;
+                            p.style.bottom = `${26 + index * (PRINT_LAYER_HEIGHT + 4) + PRINT_LAYER_HEIGHT}px`;
+                            document.querySelector('.printer-frame').appendChild(p);
+                            setTimeout(() => p.remove(), 3000);
+
+                            setTimeout(() => {
+                                printDrip.classList.remove('active');
+                                printCurrentLayer = index;
+                                const progress = ((index + 1) / PRINT_TOTAL_LAYERS) * 100;
+                                printProgressFill.style.width = `${progress}%`;
+                                printProgressText.textContent = `${Math.round(progress)}%`;
+                                resolve();
+                            }, 200);
+                        }
+                    }, 30);
+                }, 400);
+            });
+        }
+
+        async function startPrinterPrint() {
+            if (isPrinting || !printExtruder) return;
+            isPrinting = true;
+            printResetBtn.disabled = true;
+
+            printExtruder.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            printStatus.textContent = 'Escalfant impressora...';
+            await new Promise(r => setTimeout(r, 1500));
+
+            printStatus.textContent = 'Iniciant impressió...';
+            await new Promise(r => setTimeout(r, 800));
+
+            for (let i = 0; i < PRINT_TOTAL_LAYERS; i++) {
+                await printBuildLayer(i);
+                await new Promise(r => setTimeout(r, 200));
+            }
+
+            printStatus.textContent = 'Pastís imprès amb èxit!';
+            printProgressFill.style.width = '100%';
+            printProgressText.textContent = '100%';
+
+            isPrinting = false;
+            printResetBtn.disabled = false;
+        }
+
+        function resetPrinterPrint() {
+            if (isPrinting) return;
+
+            printExtruder.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+            printExtruder.style.transform = 'translateX(-50%) translateY(0px)';
+
+            printCurrentLayer = -1;
+            printLayerEls.forEach(el => {
+                el.style.height = '0';
+            });
+
+            printProgressFill.style.width = '0%';
+            printProgressText.textContent = '0%';
+            printStatus.textContent = 'Preparant impressora...';
+
+            document.querySelectorAll('.particle').forEach(p => p.remove());
+            printDrip.classList.remove('active');
+
+            setTimeout(() => startPrinterPrint(), 1200);
+        }
+
+        // Watch for printer section visibility
+        let printerStarted = false;
+        const printerObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !printerStarted) {
+                    printerStarted = true;
+                    setTimeout(startPrinterPrint, 800);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        if (document.getElementById('impressora')) {
+            printerObserver.observe(document.getElementById('impressora'));
+        }
+
+        if (printResetBtn) {
+            printResetBtn.addEventListener('click', resetPrinterPrint);
+        }
+
+        // Demo mode for testing without backend
+        // Uncomment this section to test the UI without a real Stripe backend
+        /*
+        submitPaymentBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+
+            const cardName = document.getElementById('cardName').value;
+            const cardEmail = document.getElementById('cardEmail').value;
+
+            if (!cardName || !cardEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cardEmail)) {
+                    document.getElementById('cardErrors').textContent = !cardName ? 'El nom a la targeta és obligatori' : 'El correu electrònic no és vàlid';
+                    return;
+                }
+
+                // Show loading state
+                submitPaymentBtn.disabled = true;
+                document.getElementById('paymentBtnText').style.display = 'none';
+                document.getElementById('paymentBtnLoading').style.display = 'inline';
+
+                // Simulate payment processing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Show success
+            document.getElementById('paymentSuccess').classList.add('active');
+            document.getElementById('paymentFormContainer').style.display = 'none';
+            document.querySelector('.payment-methods').style.display = 'none';
+            document.querySelector('.order-summary').style.display = 'none';
+
+            submitPaymentBtn.disabled = false;
+            document.getElementById('paymentBtnText').style.display = 'inline';
+            document.getElementById('paymentBtnLoading').style.display = 'none';
+
+            showToast('Pagament completat correctament!');
+        });
+        */
+    </script>
+</body>
+</html>
