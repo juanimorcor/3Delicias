@@ -1,0 +1,11 @@
+services:
+  web:
+    image: odoo:17.0
+
+    ports:
+      - "8069:8069"
+
+    volumes:
+      - ./odoo.conf:/etc/odoo/odoo.conf
+
+    command: odoo -i base

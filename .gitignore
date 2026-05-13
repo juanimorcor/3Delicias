@@ -1,0 +1,75 @@
+# ============================================
+# 3Delicias - Fitxers ignorats per Git
+# ============================================
+
+# Fitxers de configuració sensibles
+php/config.php
+.env
+.env.local
+.env.production
+
+# Fitxers de backup
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
+# Logs
+*.log
+logs/
+error.log
+access.log
+
+# Directoris temporals
+tmp/
+temp/
+cache/
+uploads/
+
+# Fitxers del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (si s'utilitza)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Composer (si s'utilitza)
+vendor/
+composer.lock
+
+# Fitxers de base de dades
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+
+# Certificats SSL
+*.crt
+*.key
+*.pem
+
+# Fitxers de test
+test/
+tests/
+*.test.php
+*.spec.js
+
+# Documentació generada
+docs/_build/
+site/
+
+# Altres
+.cache/
+dist/
+build/
